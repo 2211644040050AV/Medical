@@ -7,9 +7,9 @@ const AddMedicine = () => {
   const [formData, setFormData] = useState({
     name: "",
     category: "",
-    price: "",
     stock: "",
-    expiryDate: "",
+    price: "",
+    image: null,
     description: "",
   });
 
@@ -25,23 +25,42 @@ const AddMedicine = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setMedicineImage(URL.createObjectURL(file)); // Generate preview URL
+      setFormData({ ...formData, image: file });
     }
   };
-
+  
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Medicine Added:", formData);
-    alert("Medicine added successfully!");
-    navigate("/");
+    
+    const formDataToSend = new FormData();
+    Object.keys(formData).forEach(key => {
+      formDataToSend.append(key, formData[key]);
+    });
+  
+    try {
+      const response = await fetch("http://localhost:3000/add", {
+        method: "POST",
+        body: formDataToSend, 
+      });
+  
+      if (!response.ok) throw new Error(await response.text());
+  
+      alert("✅ Medicine added successfully!");
+      navigate("/");
+    } catch (error) {
+      console.error("❌ Submission Error:", error);
+      alert("⚠️ Error submitting the form.");
+    }
   };
+  
+
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid margin">
       <div className="row">
         {/* Left Image Section */}
-        <div className="col-md-6">
+        <div className="col-md-6 display-img">
           <img src={FormImg} alt="Form Background" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
 
@@ -68,31 +87,37 @@ const AddMedicine = () => {
               </select>
             </div>
 
-            {/* Stock */}
-            <div className="mb-3">
-              <label className="form-label">Quantity</label>
-              <input type="number" placeholder="Enter Quantity" className="form-control" name="stock" value={formData.stock} onChange={handleChange} required />
+            <div className="row">
+              {/* Stock */}
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Quantity</label>
+                <input type="number" placeholder="Enter Quantity" className="form-control" name="stock" value={formData.stock} onChange={handleChange} required />
+              </div>
+
+              {/* Price */}
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Price</label>
+                <input type="number" placeholder="Enter Price" className="form-control" name="price" value={formData.price} onChange={handleChange} required />
+              </div>
             </div>
 
-            {/* Price */}
-            <div className="mb-3">
-              <label className="form-label">Price</label>
-              <input type="number" placeholder="Enter Price" className="form-control" name="price" value={formData.price} onChange={handleChange} required />
-            </div>
-
-            {/* Medicine Image */}
-            <div className="mb-3">
-              <label className="form-label">Medicine Image</label>
-              <input type="file" className="form-control" accept="image/*" onChange={handleImageChange} />
-              {medicineImage && (
-                <img src={medicineImage} alt="Medicine Preview" className="mt-3" style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px" }} />
-              )}
+            <div className="row">
+              {/* Medicine Image */}
+              <div className="col-md-8 mb-3">
+                <label className="form-label">Medicine Image</label>
+                <input type="file" className="form-control" accept="image/*" onChange={handleImageChange} />
+              </div>
+              <div className="col-md-4 mb-3">
+                {medicineImage && (
+                  <img src={medicineImage} alt="Medicine Preview" className="preview-image mt-3" />
+                )}
+              </div>
             </div>
 
             {/* Description */}
             <div className="mb-3">
               <label className="form-label">Description</label>
-              <textarea className="form-control" name="description" rows="3" value={formData.description} onChange={handleChange}></textarea>
+              <textarea  placeholder="Write Something.." className="form-control" name="description" rows="3" value={formData.description} onChange={handleChange}></textarea>
             </div>
 
             {/* Submit & Cancel Buttons */}
@@ -107,4 +132,4 @@ const AddMedicine = () => {
   );
 };
 
-export default AddMedicine;
+export default AddMedicine; 
