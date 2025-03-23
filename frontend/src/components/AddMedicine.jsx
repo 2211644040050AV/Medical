@@ -1,103 +1,140 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import FormImg from "./../assets/form_img.jpg";
+import formImg from "../assets/form_img.jpg";
 
-const AddMedicine = () => {
+export default function AddMedicine() {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     category: "",
     stock: "",
     price: "",
-    image: null,
+    discount: "",
+    status: true,
     description: "",
+    image: null,
   });
 
-  const [medicineImage, setMedicineImage] = useState(null);
+  const [medicineImage, setMedicineImage] = useState(null); // ✅ Image preview
 
-  // Handle input changes
+  // ✅ Handle input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
-  // Handle image selection
+  // ✅ Handle file upload & preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData({ ...formData, image: file });
+      setFormData((prev) => ({ ...prev, image: file }));
+      setMedicineImage(URL.createObjectURL(file)); // ✅ Preview new image
     }
   };
-  
-  // Handle form submission
+
+  // ✅ Compute Final Price
+  const finalPrice = formData.price ? formData.price - (formData.price * (formData.discount || 0)) / 100 : 0;
+
+  // ✅ Handle form submission (Insert)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const formDataToSend = new FormData();
-    Object.keys(formData).forEach(key => {
-      formDataToSend.append(key, formData[key]);
+
+    const form = new FormData();
+    Object.keys(formData).forEach((key) => {
+      if (formData[key] !== null) form.append(key, formData[key]);
     });
-  
+
     try {
-      const response = await fetch("http://localhost:3000/add", {
+      const response = await fetch("http://localhost:3000/api/medicines", {
         method: "POST",
-        body: formDataToSend, 
+        body: form,
       });
-  
-      if (!response.ok) throw new Error(await response.text());
-  
-      alert("✅ Medicine added successfully!");
-      navigate("/");
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert(result.message);
+        navigate("/");
+      } else {
+        alert("⚠️ Error: " + result.message);
+      }
     } catch (error) {
-      console.error("❌ Submission Error:", error);
-      alert("⚠️ Error submitting the form.");
+      console.error("❌ Error adding medicine:", error);
+      alert("⚠️ Failed to add medicine.");
     }
   };
-  
-
 
   return (
     <div className="container-fluid margin">
       <div className="row">
         {/* Left Image Section */}
         <div className="col-md-6 display-img">
-          <img src={FormImg} alt="Form Background" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={ formImg } alt="Form Background" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
 
         {/* Right Form Section */}
         <div className="col-md-6 container-fluid">
-          <h2 className="py-3 mt-2 text-white text-center bg-success">Add New Medicine</h2>
+          <h2 className="py-3 mt-2 text-white text-center bg-success">Add Medicine</h2>
 
-          <form onSubmit={handleSubmit} className="lbl mt-3 mb-5">
+          <form onSubmit={handleSubmit} className="lbl mt-3 mb-5" encType="multipart/form-data">
             {/* Medicine Name */}
             <div className="mb-3">
               <label className="form-label">Medicine Name</label>
               <input type="text" placeholder="Enter Medicine Name" className="form-control" name="name" value={formData.name} onChange={handleChange} required />
             </div>
 
-            {/* Category */}
-            <div className="mb-3">
-              <label className="form-label">Category</label>
-              <select className="form-control" name="category" value={formData.category} onChange={handleChange} required>
-                <option value="">Select Category</option>
-                <option>Tablets</option>
-                <option>Capsules</option>
-                <option>Syrup</option>
-                <option>Injections</option>
-              </select>
-            </div>
-
             <div className="row">
+              {/* Category */}
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Category</label>
+                <select className="form-control" name="category" value={formData.category} onChange={handleChange} required>
+                  <option value="">Select Category</option>
+                  <option>Tablets</option>
+                  <option>Capsules</option>
+                  <option>Syrup</option>
+                  <option>Injections</option>
+                </select>
+              </div>
+
               {/* Stock */}
               <div className="col-md-6 mb-3">
                 <label className="form-label">Quantity</label>
                 <input type="number" placeholder="Enter Quantity" className="form-control" name="stock" value={formData.stock} onChange={handleChange} required />
               </div>
+            </div>
 
+            <div className="row">
               {/* Price */}
               <div className="col-md-6 mb-3">
-                <label className="form-label">Price</label>
+                <label className="form-label">Price (₹)</label>
                 <input type="number" placeholder="Enter Price" className="form-control" name="price" value={formData.price} onChange={handleChange} required />
+              </div>
+
+              {/* Discount */}
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Discount (%)</label>
+                <input type="number" placeholder="Enter Discount Value" className="form-control" name="discount" value={formData.discount} onChange={handleChange} required />
+              </div>
+            </div>
+
+            <div className="row">
+              {/* Final Price (Disabled) */}
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Final Price (₹)</label>
+                <input type="text" className="form-control" value={finalPrice.toFixed(2)} disabled />
+              </div>
+
+              {/* Status */}
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Status</label>
+                <div className="form-check form-switch">
+                  <input type="checkbox" className="form-check-input" name="status" checked={formData.status} onChange={handleChange} />
+                  <label className="form-check-label ms-2">{formData.status ? "Active" : "Inactive"}</label>
+                </div>
               </div>
             </div>
 
@@ -105,19 +142,17 @@ const AddMedicine = () => {
               {/* Medicine Image */}
               <div className="col-md-8 mb-3">
                 <label className="form-label">Medicine Image</label>
-                <input type="file" className="form-control" accept="image/*" onChange={handleImageChange} />
+                <input type="file" className="form-control" accept="image/*" name="image" onChange={handleImageChange} />
               </div>
               <div className="col-md-4 mb-3">
-                {medicineImage && (
-                  <img src={medicineImage} alt="Medicine Preview" className="preview-image mt-3" />
-                )}
+                {medicineImage && <img src={medicineImage} alt="Medicine Preview" className="preview-image mt-3" style={{ width: "100px", height: "100px", objectFit: "cover" }} />}
               </div>
             </div>
 
             {/* Description */}
             <div className="mb-3">
               <label className="form-label">Description</label>
-              <textarea  placeholder="Write Something.." className="form-control" name="description" rows="3" value={formData.description} onChange={handleChange}></textarea>
+              <textarea placeholder="Write Something.." className="form-control" name="description" rows="3" value={formData.description} onChange={handleChange}></textarea>
             </div>
 
             {/* Submit & Cancel Buttons */}
@@ -130,6 +165,4 @@ const AddMedicine = () => {
       </div>
     </div>
   );
-};
-
-export default AddMedicine; 
+}
