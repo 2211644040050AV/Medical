@@ -11,7 +11,7 @@ export default function AddMedicine() {
     stock: "",
     price: "",
     discount: "",
-    status: true,
+    status: false,
     description: "",
     image: null,
   });
@@ -72,7 +72,7 @@ export default function AddMedicine() {
     <div className="container-fluid margin">
       <div className="row">
         {/* Left Image Section */}
-        <div className="col-md-6 display-img">
+        <div className="col-md-6 display-img p-0 m-0">
           <img src={ formImg } alt="Form Background" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import formImg from "../assets/form_img.jpg";
+import formImg from "../assets/form_img1.jpg";
 
 export default function UpdateMedicine() {
   const { id } = useParams(); // ✅ Get medicine ID from URL
@@ -93,7 +93,7 @@ export default function UpdateMedicine() {
     <div className="container-fluid margin">
       <div className="row">
         {/* Left Image Section */}
-        <div className="col-md-6 display-img">
+        <div className="col-md-6 display-img p-0 m-0"> 
           <img
             src={formImg}
             alt="Form Background"

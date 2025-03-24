@@ -140,6 +140,11 @@ app.delete("/api/medicines/:id", async (req, res) => {
   }
 });
 
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
 // ✅ Start Server
 app.listen(port, () => {
   console.log(`🚀 Server running on http://localhost:${port}`);
