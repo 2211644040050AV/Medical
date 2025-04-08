@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Slider from 'react-slick';
+import { useNavigate } from 'react-router-dom';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
@@ -18,6 +19,7 @@ const PrevArrow = ({ onClick }) => (
 
 export default function Cards() {
   const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchActiveMedicines = async () => {
@@ -39,7 +41,7 @@ export default function Cards() {
     infinite: true,
     speed: 1000,
     slidesToShow: 4,
-    slidesToScroll: 2,
+    slidesToScroll: 1,
     arrows: true,
     autoplay: true,
     autoplaySpeed: 3000,
@@ -83,33 +85,59 @@ export default function Cards() {
                   const finalPrice = price - (price * discount) / 100;
 
                   return (
-                    <div key={index} className="px-2">
-                      <div className="card h-100 shadow-sm hover-card">
+                    <div
+                      key={index}
+                      className="px-3"
+                      onClick={() => navigate(`/medicine/${product._id}`)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="card h-100 shadow-sm hover-card"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          borderRadius: "0.5rem",
+                          overflow: "hidden",
+                        }}
+                      >
                         {product.image && (
                           <img
                             src={`http://localhost:3000${product.image}`}
                             alt={product.name}
                             className="card-img-top"
                             style={{
-                              height: "180px",
-                              objectFit: "cover",
+                              height: "200px",
+                              width: "250px",
+                              objectFit: "contain",
+                              background: "transparent",
+                              padding: "10px",
                               borderTopLeftRadius: "0.5rem",
                               borderTopRightRadius: "0.5rem",
                             }}
                           />
                         )}
                         <div className="card-body text-start">
-                          <h5 className="fw-bold mb-1">{product.name}</h5>
-                          <p className="text-muted small mb-2">{product.description}</p>
+                          <h5 className="fw-bold mb-1" style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: "100%",
+                          }}>
+                            {product.name}
+                          </h5>
+
+                          {/* <p className="text-muted small mb-2">
+                            {product.description?.length > 60
+                              ? product.description.slice(0, 50) + '...'
+                              : product.description}
+                          </p> */}
 
                           <div className="mb-2">
                             <span className="bg-success text-white rounded px-2 py-1 small">
-                              3.6 <i className="fas fa-star"></i>
+                              4.6 <i className="fas fa-star"></i>
                             </span>
-                            {[...Array(3)].map((_, i) => (
+                            {[...Array(4)].map((_, i) => (
                               <i key={i} className="fas fa-star text-warning small ms-1"></i>
                             ))}
-                            <i className="fas fa-star text-secondary small ms-1"></i>
                             <i className="fas fa-star text-secondary small ms-1"></i>
                           </div>
 

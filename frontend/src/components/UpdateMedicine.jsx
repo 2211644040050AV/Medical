@@ -5,14 +5,28 @@ import formImg from "../assets/form_img1.jpg";
 export default function UpdateMedicine() {
   const { id } = useParams(); // ✅ Get medicine ID from URL
   const navigate = useNavigate();
+  const [brands, setBrands] = useState([]);
+
+
+  useEffect(() => {
+    fetch("http://localhost:3000/api/brands")
+      .then((res) => res.json())
+      .then((data) => setBrands(data))
+      .catch((err) => console.error("Failed to load brands:", err));
+  }, []);
+  
 
   const [formData, setFormData] = useState({
     name: "",
+    modelNumber: "",
+    brand: "",
     category: "",
+    subCategory: "",
     stock: "",
     price: "",
     discount: "",
-    status: true,
+    deliveryCharge: "",
+    status: false,
     description: "",
     image: null,
   });
@@ -102,39 +116,73 @@ export default function UpdateMedicine() {
         </div>
 
         {/* Right Form Section */}
-        <div className="col-md-6 container-fluid">
+        <div className="col-md-6">
           <h2 className="py-3 mt-2 text-white text-center bg-success">
             Update Medicine
           </h2>
 
           <form
             onSubmit={handleSubmit}
-            className="lbl mt-3 mb-5"
+            className="p-4"
             encType="multipart/form-data"
           >
-            {/* Medicine Name */}
             <div className="mb-3">
               <label className="form-label">Medicine Name</label>
               <input
                 type="text"
-                placeholder="Enter Medicine Name"
-                className="form-control"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
+                className="form-control"
+                placeholder="Enter Medicine Name"
                 required
               />
             </div>
 
+            <div className="mb-3">
+              <label className="form-label">Model Number</label>
+              <input
+                type="text"
+                name="modelNumber"
+                value={formData.modelNumber}
+                onChange={handleChange}
+                className="form-control"
+                placeholder="Enter Model Number"
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Brand</label>
+              <select
+                name="brand"
+                value={formData.brand}
+                onChange={handleChange}
+                className="form-control"
+                required
+              >
+                <option value="">Select Brand</option>
+                <option value="Cipla">Cipla</option>
+                <option value="Sun Pharma">Sun Pharma</option>
+                <option value="Dr. Reddy's">Dr. Reddy's</option>
+                <option value="Lupin">Lupin</option>
+                <option value="Zydus">Zydus</option>
+                <option value="Glenmark">Glenmark</option>
+                <option value="Mankind">Mankind</option>
+                <option value="Abbott">Abbott</option>
+                <option value="Alkem">Alkem</option>
+                <option value="Intas">Intas</option>
+              </select>
+            </div>
+
             <div className="row">
-              {/* Category */}
               <div className="col-md-6 mb-3">
                 <label className="form-label">Category</label>
                 <select
-                  className="form-control"
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
+                  className="form-control"
                   required
                 >
                   <option value="">Select Category</option>
@@ -145,53 +193,70 @@ export default function UpdateMedicine() {
                 </select>
               </div>
 
-              {/* Stock */}
+              <div className="col-md-6 mb-3">
+                <label className="form-label">subCategory</label>
+                <select
+                  name="subcategory"
+                  value={formData.subcategory}
+                  onChange={handleChange}
+                  className="form-control"
+                  required
+                >
+                  <option value="">Select Subcategory</option>
+                  <option value="Pain Relief">Pain Relief</option>
+                  <option value="Antibiotics">Antibiotics</option>
+                  <option value="Vitamins">Vitamins</option>
+                  <option value="Allergy">Allergy</option>
+                  <option value="Skin Care">Skin Care</option>
+                  <option value="Heart">Heart</option>
+                  <option value="Cold & Flu">Cold & Flu</option>
+                  <option value="Diabetes">Diabetes</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="row">
               <div className="col-md-6 mb-3">
                 <label className="form-label">Quantity</label>
                 <input
                   type="number"
-                  placeholder="Enter Quantity"
-                  className="form-control"
                   name="stock"
                   value={formData.stock}
                   onChange={handleChange}
+                  className="form-control"
+                  placeholder="Enter Quantity"
                   required
                 />
               </div>
-            </div>
 
-            <div className="row">
-              {/* Price */}
               <div className="col-md-6 mb-3">
                 <label className="form-label">Price (₹)</label>
                 <input
                   type="number"
-                  placeholder="Enter Price"
-                  className="form-control"
                   name="price"
                   value={formData.price}
                   onChange={handleChange}
-                  required
-                />
-              </div>
-
-              {/* Discount */}
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Discount (%)</label>
-                <input
-                  type="number"
-                  placeholder="Enter Discount Value"
                   className="form-control"
-                  name="discount"
-                  value={formData.discount}
-                  onChange={handleChange}
+                  placeholder="Enter Price"
                   required
                 />
               </div>
             </div>
 
             <div className="row">
-              {/* Final Price (Disabled) */}
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Discount (%)</label>
+                <input
+                  type="number"
+                  name="discount"
+                  value={formData.discount}
+                  onChange={handleChange}
+                  className="form-control"
+                  placeholder="Enter Discount"
+                  required
+                />
+              </div>
+
               <div className="col-md-6 mb-3">
                 <label className="form-label">Final Price (₹)</label>
                 <input
@@ -201,17 +266,30 @@ export default function UpdateMedicine() {
                   disabled
                 />
               </div>
+            </div>
 
-              {/* Status */}
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Delivery Charge (₹)</label>
+                <input
+                  type="number"
+                  name="deliveryCharge"
+                  value={formData.deliveryCharge}
+                  onChange={handleChange}
+                  className="form-control"
+                  placeholder="Enter Delivery Charge"
+                />
+              </div>
+
               <div className="col-md-6 mb-3">
                 <label className="form-label">Status</label>
                 <div className="form-check form-switch">
                   <input
                     type="checkbox"
-                    className="form-check-input"
                     name="status"
                     checked={formData.status}
                     onChange={handleChange}
+                    className="form-check-input"
                   />
                   <label className="form-check-label ms-2">
                     {formData.status ? "Active" : "Inactive"}
@@ -221,23 +299,23 @@ export default function UpdateMedicine() {
             </div>
 
             <div className="row">
-              {/* Medicine Image */}
               <div className="col-md-8 mb-3">
                 <label className="form-label">Medicine Image</label>
                 <input
                   type="file"
-                  className="form-control"
-                  accept="image/*"
                   name="image"
+                  accept="image/*"
                   onChange={handleImageChange}
+                  className="form-control"
                 />
               </div>
+
               <div className="col-md-4 mb-3">
                 {medicineImage && (
                   <img
                     src={medicineImage}
-                    alt="Medicine Preview"
-                    className="preview-image mt-3"
+                    alt="Preview"
+                    className="img-thumbnail"
                     style={{
                       width: "100px",
                       height: "100px",
@@ -248,7 +326,18 @@ export default function UpdateMedicine() {
               </div>
             </div>
 
-            {/* Submit & Cancel Buttons */}
+            <div className="mb-3">
+              <label className="form-label">Description</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                className="form-control"
+                rows="3"
+                placeholder="Write something..."
+              ></textarea>
+            </div>
+
             <div className="d-flex">
               <button type="submit" className="btn btn-primary">
                 Save Medicine

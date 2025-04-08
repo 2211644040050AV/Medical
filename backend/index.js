@@ -4,11 +4,12 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs").promises;
-const Medicine = require("./models/medicines");
+const Medicine = require("./models/medicines"); // ✅ Make sure the schema has 'subcategory'
 
 const app = express();
 const port = 3000;
 
+// ✅ Middleware
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Serve uploaded images
@@ -20,88 +21,107 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ DB Connection Error:", err));
+  .catch((err) => console.error("❌ DB Connection Error:", err));
 
-// ✅ Multer Storage (Image Upload)
+// ✅ Multer Storage for Image Uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
-
 const upload = multer({ storage });
 
-// ✅ Create New Medicine (INSERT)
+// ✅ Create Medicine
 app.post("/api/medicines", upload.single("image"), async (req, res) => {
   try {
-    const { name, category, stock, price, discount, status, description } = req.body;
+    const {
+      name,
+      modelNumber,
+      brand,
+      category,
+      subcategory, // ✅ Match frontend field name
+      stock,
+      price,
+      discount,
+      deliveryCharge,
+      status,
+      description,
+    } = req.body;
 
     const medicine = new Medicine({
       name,
+      modelNumber,
+      brand,
       category,
-      stock,
-      price,
-      discount: discount || 0,
+      subcategory,
+      stock: parseInt(stock) || 0,
+      price: parseFloat(price) || 0,
+      discount: parseFloat(discount) || 0,
+      deliveryCharge: parseFloat(deliveryCharge) || 0,
       status: status === "true" || status === true,
       description,
-      image: req.file ? `/uploads/${req.file.filename}` : null, // Store image path
+      image: req.file ? `/uploads/${req.file.filename}` : null,
     });
 
     await medicine.save();
     res.status(201).json({ message: "✅ Medicine added successfully!", medicine });
   } catch (error) {
+    console.error("❌ Error while adding medicine:", error);
     res.status(500).json({ message: "⚠️ Internal Server Error", error });
   }
 });
 
-// ✅ Update Existing Medicine (UPDATE)
+// ✅ Update Medicine
 app.put("/api/medicines/:id", upload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, stock, price, discount, status, description } = req.body;
+    const {
+      name,
+      modelNumber,
+      brand,
+      category,
+      subcategory,
+      stock,
+      price,
+      discount,
+      deliveryCharge,
+      status,
+      description,
+    } = req.body;
 
     const medicine = await Medicine.findById(id);
     if (!medicine) return res.status(404).json({ message: "⚠️ Medicine not found" });
 
-    let updateData = {
+    const updateData = {
       name,
+      modelNumber,
+      brand,
       category,
-      stock,
-      price,
-      discount,
+      subcategory,
+      stock: parseInt(stock) || 0,
+      price: parseFloat(price) || 0,
+      discount: parseFloat(discount) || 0,
+      deliveryCharge: parseFloat(deliveryCharge) || 0,
       status: status === "true" || status === true,
       description,
     };
 
-    // ✅ Handle Image Update
     if (req.file) {
-      // Remove old image if exists
       if (medicine.image) {
         const oldImagePath = path.join(__dirname, medicine.image);
         try {
           await fs.unlink(oldImagePath);
         } catch (err) {
-          console.warn("⚠️ Error deleting old image:", err);
+          console.warn("⚠️ Failed to delete old image:", err);
         }
       }
       updateData.image = `/uploads/${req.file.filename}`;
     }
 
     const updatedMedicine = await Medicine.findByIdAndUpdate(id, updateData, { new: true });
-
     res.json({ message: "✅ Medicine updated successfully!", medicine: updatedMedicine });
   } catch (error) {
+    console.error("❌ Error updating medicine:", error);
     res.status(500).json({ message: "⚠️ Internal Server Error", error });
-  }
-});
-
-// ✅ Get Single Medicine (For Update Form)
-app.get("/api/medicines/:id", async (req, res) => {
-  try {
-    const medicine = await Medicine.findById(req.params.id);
-    if (!medicine) return res.status(404).json({ message: "⚠️ Medicine not found" });
-    res.json(medicine);
-  } catch (error) {
-    res.status(500).json({ message: "⚠️ Error fetching medicine", error });
   }
 });
 
@@ -111,19 +131,29 @@ app.get("/api/medicines", async (req, res) => {
     const medicines = await Medicine.find();
     res.json(medicines);
   } catch (error) {
-    res.status(500).json({ message: "⚠️ Error fetching medicines", error });
+    console.error("❌ Error fetching medicines:", error);
+    res.status(500).json({ message: "⚠️ Internal Server Error", error });
+  }
+});
+
+// ✅ Get Single Medicine
+app.get("/api/medicines/:id", async (req, res) => {
+  try {
+    const medicine = await Medicine.findById(req.params.id);
+    if (!medicine) return res.status(404).json({ message: "⚠️ Medicine not found" });
+    res.json(medicine);
+  } catch (error) {
+    console.error("❌ Error fetching medicine:", error);
+    res.status(500).json({ message: "⚠️ Internal Server Error", error });
   }
 });
 
 // ✅ Delete Medicine
 app.delete("/api/medicines/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-    const medicine = await Medicine.findById(id);
-
+    const medicine = await Medicine.findById(req.params.id);
     if (!medicine) return res.status(404).json({ message: "⚠️ Medicine not found" });
 
-    // Remove image if exists
     if (medicine.image) {
       const imagePath = path.join(__dirname, medicine.image);
       try {
@@ -133,19 +163,21 @@ app.delete("/api/medicines/:id", async (req, res) => {
       }
     }
 
-    await Medicine.findByIdAndDelete(id);
+    await Medicine.findByIdAndDelete(req.params.id);
     res.json({ message: "✅ Medicine deleted successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "⚠️ Error deleting medicine", error });
+    console.error("❌ Error deleting medicine:", error);
+    res.status(500).json({ message: "⚠️ Internal Server Error", error });
   }
 });
 
+// ✅ Global Error Handler
 app.use((err, req, res, next) => {
-  console.error("Server Error:", err);
-  res.status(500).json({ error: "Internal Server Error" });
+  console.error("Unhandled Error:", err);
+  res.status(500).json({ error: "Something went wrong" });
 });
 
 // ✅ Start Server
 app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
+  console.log(`🚀 Server running at http://localhost:${port}`);
 });
